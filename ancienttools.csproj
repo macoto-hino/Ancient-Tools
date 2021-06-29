@@ -74,6 +74,11 @@
     <None Include="assets\ancienttools\lang\en.json" />
     <None Include="assets\ancienttools\recipes\grid\tools\pestle.json" />
     <None Include="assets\ancienttools\shapes\block\mortar.json" />
+    <None Include="assets\ancienttools\shapes\block\mortar\alchemy\alchemy_base.json" />
+    <None Include="assets\ancienttools\shapes\block\mortar\alchemy\alchemy_potion.json" />
+    <None Include="assets\ancienttools\shapes\block\mortar\alchemy\alchemy_game_flower_horsetail_free.json" />
+    <None Include="assets\ancienttools\shapes\block\mortar\alchemy\alchemy_game_mushroom_flyagaric_normal_free.json" />
+    <None Include="assets\ancienttools\shapes\block\mortar\alchemy\alchemy_game_redmeat_raw.json" />
     <None Include="assets\ancienttools\shapes\block\mortar\resource_game_bone.json" />
     <None Include="assets\ancienttools\shapes\block\mortar\resource_game_rawcassava_dried.json" />
     <None Include="assets\ancienttools\shapes\block\mortar\resource_default.json" />
@@ -86,6 +91,7 @@
     <None Include="assets\ancienttools\shapes\block\mortar\resource_game_ore_borax.json" />
     <None Include="assets\ancienttools\shapes\block\mortar\resource_game_ore_sulfur.json" />
     <None Include="assets\ancienttools\shapes\block\mortar\resource_game_ore_sylvite.json" />
+    <None Include="assets\ancienttools\shapes\block\mortar\resource_game_stone_chalk.json" />
     <None Include="assets\ancienttools\shapes\block\mortar\resource_game_stone_halite.json" />
     <None Include="assets\ancienttools\shapes\block\mortar\resource_game_stone_limestone.json" />
     <None Include="assets\ancienttools\shapes\item\pestle.json" />

@@ -34,7 +34,15 @@
         sulfur: { base: "game:item/resource/ungraded/sulfur" },
         borax: { base: "game:item/resource/ungraded/borax" },
         sylvite: { base: "game:item/resource/ungraded/sylvite" },
-        cassava: { base: "game:item/food/vegetable/cassava-dried" }
+        cassava: { base: "game:item/food/vegetable/cassava-dried" },
+
+        base: { base: "game:block/plant/grasscoverage/inventory/top_normal" },
+        cap: { base: "game:block/plant/mushroom/flyagaric/cap" },
+		stipe: { base: "game:block/plant/mushroom/flyagaric/stipe" },
+		pores: { base: "game:block/plant/mushroom/flyagaric/pores" },
+        string: { base: "game:item/tool/material/string" },
+        horsetail3: { base: "game:block/plant/flower/stem/horsetail3" },
+        redmeat: { base: "game:item/food/meat/raw"}
     },
     blockmaterial: "Stone",
     sidesolid: { all: false },

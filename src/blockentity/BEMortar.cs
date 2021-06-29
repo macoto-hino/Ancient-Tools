@@ -28,21 +28,23 @@ namespace AncientTools.BlockEntity
 
         private Vec3f lookAtPlayerVector = new Vec3f(0.0f, 0.0f, 0.0f);
         private float[] animationPositions = { 0.050f, 0.050f, 0.075f, 0.1f, 0.125f, 0.150f, 0.125f, 0.1f, 0.070f, 0.050f, 0.050f };
-        private Vec3f[] animationRotations = { 
-            new Vec3f(0.0f, 0.15f, 0.0f), 
-            new Vec3f(0.0f, 0.10f, 0.0f), 
-            new Vec3f(0.0f, 0.05f, 0.0f), 
-            new Vec3f(0f, 0.025f, 0f), 
-            new Vec3f(0f, 0.0f, 0f), 
-            new Vec3f(0f, 0.0f, 0f), 
-            new Vec3f(0f, 0.0f, 0f), 
-            new Vec3f(0f, 0.025f, 0f), 
-            new Vec3f(0.0f, 0.05f, 0.0f), 
-            new Vec3f(0.0f, 0.10f, 0.0f), 
-            new Vec3f(0.0f, 0.15f, 0.0f) 
+        private Vec3f[] animationRotations = {
+            new Vec3f(0.0f, 0.15f, 0.0f),
+            new Vec3f(0.0f, 0.10f, 0.0f),
+            new Vec3f(0.0f, 0.05f, 0.0f),
+            new Vec3f(0f, 0.025f, 0f),
+            new Vec3f(0f, 0.0f, 0f),
+            new Vec3f(0f, 0.0f, 0f),
+            new Vec3f(0f, 0.0f, 0f),
+            new Vec3f(0f, 0.025f, 0f),
+            new Vec3f(0.0f, 0.05f, 0.0f),
+            new Vec3f(0.0f, 0.10f, 0.0f),
+            new Vec3f(0.0f, 0.15f, 0.0f)
         };
 
         private int animPosition = 0;
+
+        private GridRecipe alchemyRecipe;
 
         public ItemSlot ResourceSlot
         {
@@ -52,10 +54,22 @@ namespace AncientTools.BlockEntity
         {
             get { return inventory[1]; }
         }
+        public ItemSlot AlchemySlot1
+        {
+            get { return inventory[2];  }
+        }
+        public ItemSlot AlchemySlot2
+        {
+            get { return inventory[3]; }
+        }
+        public ItemSlot AlchemyOutput
+        {
+            get { return inventory[4]; }
+        }
 
         public BEMortar()
         {
-            inventory = new InventoryGeneric(2, null, null);
+            inventory = new InventoryGeneric(5, null, null);
         }
         ~BEMortar()
         {
@@ -65,7 +79,7 @@ namespace AncientTools.BlockEntity
         public override void Initialize(ICoreAPI api)
         {
             //-- Holds mesh data of items inserted into the mortar. The resource mesh is NOT used as the resource appearance is not actually represented by the inserted resrouce. --//
-            meshes = new MeshData[2];
+            meshes = new MeshData[5];
 
             if(api.Side == EnumAppSide.Client)
             {
@@ -118,46 +132,40 @@ namespace AncientTools.BlockEntity
                 {
                     mesher.AddMeshData(meshes[1].Clone()
                         .Translate(new Vec3f(0, animationPositions[animPosition], 0))
-                        .Rotate(new Vec3f(0.5f, 0.0f, 0.5f), 
-                        lookAtPlayerVector.X + animationRotations[animPosition].X, 
-                        lookAtPlayerVector.Y + animationRotations[animPosition].Y, 
+                        .Rotate(new Vec3f(0.5f, 0.0f, 0.5f),
+                        lookAtPlayerVector.X + animationRotations[animPosition].X,
+                        lookAtPlayerVector.Y + animationRotations[animPosition].Y,
                         lookAtPlayerVector.Z + animationRotations[animPosition].Z));
                 }
             }
 
             if (!ResourceSlot.Empty)
             {
-                string shapeBase = "ancienttools:shapes/";
-
-                string firstCodePart = ResourceSlot.Itemstack.Item.FirstCodePart();
-                string lastCodePart = ResourceSlot.Itemstack.Item.LastCodePart();
-
-                string resourcePath;
-
-                if(ResourceSlot.Itemstack.Item.FirstCodePart() == ResourceSlot.Itemstack.Item.LastCodePart())
-                {
-                    //-- Used when only one codePart is present on the object. Example: game:bone --//
-                    resourcePath = "block/mortar/resource_" + ResourceSlot.Itemstack.Item.Code.Domain + "_" + firstCodePart;
-                }
-                else
-                {
-                    //-- Otherwise, multiple parts are used. Currently only the first code part and last code part are used. Example: game:grain-spelt --//
-                    resourcePath = "block/mortar/resource_" + ResourceSlot.Itemstack.Item.Code.Domain + "_" + firstCodePart + "_" + lastCodePart;
-                }
-
-                //-- If no shape asset with the first/first and last parts are found then a simple, default mesh is used. --//
-                if (Api.Assets.Exists(new AssetLocation(shapeBase + resourcePath + ".json")))
-                {
-                    this.AddMesh(block, mesher, shapeBase + resourcePath, tessThreadTesselator.GetTextureSource(ResourceSlot.Itemstack.Item));
-                }
-                else
-                {
-                    resourcePath = "block/mortar/resource_default";
-
-                    this.AddMesh(block, mesher, shapeBase + resourcePath, tessThreadTesselator.GetTextureSource(ResourceSlot.Itemstack.Item));
-                }
+                PrepareMesh("ancienttools:shapes/block/mortar/resource_", ResourceSlot, block, mesher, tessThreadTesselator);
             }
 
+            if (!AlchemySlot1.Empty)
+            {
+                PrepareMesh("ancienttools:shapes/block/mortar/alchemy/alchemy_", AlchemySlot1, block, mesher, tessThreadTesselator);
+            }
+
+            if (!AlchemySlot2.Empty)
+            {
+                PrepareMesh("ancienttools:shapes/block/mortar/alchemy/alchemy_", AlchemySlot2, block, mesher, tessThreadTesselator);
+            }
+            
+            if(!AlchemyOutput.Empty)
+            {
+                string shapeBase = "ancienttools:shapes/";
+                string resourcePath;
+
+                if (AlchemyOutput.Itemstack.Item.FirstCodePart() == "potionbase" && AlchemyOutput.Itemstack.Item.FirstCodePart(1) == "basic")
+                    resourcePath = "block/mortar/alchemy/alchemy_base";
+                else
+                    resourcePath = "block/mortar/alchemy/alchemy_potion";
+
+                this.AddMesh(block, mesher, shapeBase + resourcePath, tessThreadTesselator.GetTexSource(this.Block));
+            }
             return false;
         }
         public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
@@ -186,76 +194,278 @@ namespace AncientTools.BlockEntity
                 //-- If the player is standing and clicks the pestle with an empty hand, attempt to give them a pestle/resource that may be in the mortar --//
                 if (activeSlot.Empty)
                 {
-                    if (!PestleSlot.Empty)
-                    {
-                        GiveObject(byPlayer, PestleSlot);
-                        this.updateMesh(1);
-                    }
-                    else if (!ResourceSlot.Empty)
-                    {
-                        GiveObject(byPlayer, ResourceSlot);
-                    }
+                    TakeFromMortar(byPlayer);
                 }
                 else
                 {
                     //-- Give the player the resource if the resource in hand matches the resource in the mortar --//
-                    if (!ResourceSlot.Empty && ResourceSlot.Itemstack.Collectible.Code == activeSlot.Itemstack.Collectible.Code)
+                    if (ReturnMatchingResource(byPlayer, activeSlot))
                     {
-                        GiveObject(byPlayer, ResourceSlot);
+                        return;
                     }
                     else
                     {
-                        if (PestleSlot.Empty && !activeSlot.Empty)
-                        {
-                            if (activeSlot.Itemstack.Collectible.ItemClass == EnumItemClass.Item)
-                            {
-                                if (activeSlot.Itemstack.Item.FirstCodePart() == "pestle")
-                                {
-                                    if(Api.Side == EnumAppSide.Client)
-                                        stoneSound.Start();
 
-                                    InsertObject(activeSlot, PestleSlot, activeSlot.Itemstack.Item, 1);
-                                    this.updateMesh(1);
-                                }
-                            }
-                        }
+                        if (InsertPestle(activeSlot))
+                            return;
 
-                        if (ResourceSlot.Empty && !activeSlot.Empty)
-                        {
-                            if (activeSlot.Itemstack.Collectible.ItemClass == EnumItemClass.Item)
-                            {
-                                if (activeSlot.Itemstack.Item.GrindingProps != null)
-                                {
-                                    if (Api.Side == EnumAppSide.Client)
-                                        SetGrindingParticlesColor(activeSlot.Itemstack.Item.LastCodePart(), activeSlot.Itemstack.Item.FirstCodePart());
+                        if (InsertResource(activeSlot))
+                            return;
 
-                                    InsertObject(activeSlot, ResourceSlot, activeSlot.Itemstack.Item, 1);
-                                }
-                            }
-                        }
+                        if (ExtractPotion(byPlayer, activeSlot))
+                            return;
+
+                        if (InsertAlchemyObject1(activeSlot))
+                            return;
+
+                        InsertAlchemyObject2(activeSlot);
                     }
                 }
             }
         }
+        
         public bool OnSneakInteract(IPlayer byPlayer)
         {
-            if (!byPlayer.Entity.Controls.Sneak || PestleSlot.Empty || ResourceSlot.Empty || !byPlayer.InventoryManager.ActiveHotbarSlot.Empty)
+            if (!byPlayer.Entity.Controls.Sneak || PestleSlot.Empty || !byPlayer.InventoryManager.ActiveHotbarSlot.Empty)
+                return false;
+
+            if(!ResourceSlot.Empty)
+            {
+                BeginGrind();
+            }
+            else if(!AlchemySlot1.Empty && !AlchemySlot2.Empty)
+            {
+                BeginAlchemyGrind();
+            }
+            else
             {
                 OnInteractStop();
-
                 return false;
             }
 
-            BeginGrind();
             PerformGrind(byPlayer);
+            return true;
+        }
+        private void PrepareMesh(string shapeFolderLocation, ItemSlot inventorySlot, BlockMortar block, ITerrainMeshPool mesher, ITesselatorAPI tessThreadTesselator)
+        {
+            string codePath = inventorySlot.Itemstack.Collectible.Code.Path;
+            string resourcePath = shapeFolderLocation + inventorySlot.Itemstack.Collectible.Code.Domain + "_";
+
+            foreach (char character in codePath)
+            {
+                if (character != '-')
+                    resourcePath += character;
+                else
+                    resourcePath += '_';
+            }
+
+            //-- If no shape asset is found then a default mesh is used. --//
+            if (Api.Assets.Exists(new AssetLocation(resourcePath + ".json")))
+            {
+                this.AddMesh(block, mesher, resourcePath, tessThreadTesselator.GetTexSource(block));
+            }
+            else
+            {
+                resourcePath = "ancienttools:shapes/block/mortar/resource_default";
+
+                this.AddMesh(block, mesher, resourcePath, tessThreadTesselator.GetTexSource(block));
+            }
+        }
+        private void TakeFromMortar(IPlayer byPlayer)
+        {
+            if (!PestleSlot.Empty)
+            {
+                GiveObject(byPlayer, PestleSlot);
+                this.updateMesh(1);
+            }
+            else if (!AlchemySlot2.Empty)
+            {
+                GiveObject(byPlayer, AlchemySlot2);
+            }
+            else if (!AlchemySlot1.Empty)
+            {
+                GiveObject(byPlayer, AlchemySlot1);
+            }
+            else if (!ResourceSlot.Empty)
+            {
+                GiveObject(byPlayer, ResourceSlot);
+            }
+        }
+        private bool ExtractPotion(IPlayer byPlayer, ItemSlot activeSlot)
+        {
+            if (activeSlot.Itemstack.Block == null || 
+                activeSlot.Itemstack.Block.Code.Domain != "alchemy" || 
+                activeSlot.Itemstack.Block.FirstCodePart() != "potionflask")
+                return false;
+
+            if (AlchemyOutput.Itemstack.Item.FirstCodePart() == "potionbase" && AlchemyOutput.Itemstack.Item.FirstCodePart(1) == "basic")
+                return true;
+
+            string flaskType = activeSlot.Itemstack.Block.FirstCodePart(1);
+            string potionType = AlchemyOutput.Itemstack.Item.FirstCodePart(1);
+            string potionStrength = AlchemyOutput.Itemstack.Item.LastCodePart();
+
+            ItemStack potion = new ItemStack(Api.World.GetBlock(new AssetLocation("alchemy", "potion-" + flaskType + "-" + potionType + "-" + potionStrength)), 1);
+
+            if (!byPlayer.InventoryManager.TryGiveItemstack(potion, true))
+            {
+                Api.World.SpawnItemEntity(potion, Pos.ToVec3d());
+            }
+
+            AlchemyOutput.TakeOutWhole();
+            activeSlot.TakeOut(1);
+            activeSlot.MarkDirty();
+            AlchemyOutput.MarkDirty();
 
             return true;
+        }
+        private bool ReturnMatchingResource(IPlayer byPlayer, ItemSlot activeSlot)
+        {
+            if (!ResourceSlot.Empty && ResourceSlot.Itemstack.Collectible.Code == activeSlot.Itemstack.Collectible.Code)
+            {
+                GiveObject(byPlayer, ResourceSlot);
+                return true;
+            }
+            else if (!AlchemySlot1.Empty && AlchemySlot1.Itemstack.Collectible.Code == activeSlot.Itemstack.Collectible.Code)
+            {
+                GiveObject(byPlayer, AlchemySlot1);
+                return true;
+            }
+            else if (!AlchemySlot2.Empty && AlchemySlot2.Itemstack.Collectible.Code == activeSlot.Itemstack.Collectible.Code)
+            {
+                GiveObject(byPlayer, AlchemySlot2);
+                return true;
+            }
+
+            return false;
+        }
+        private bool InsertPestle(ItemSlot activeSlot)
+        {
+            if (PestleSlot.Empty)
+            {
+                if (activeSlot.Itemstack.Collectible.ItemClass == EnumItemClass.Item)
+                {
+                    if (activeSlot.Itemstack.Item.FirstCodePart() == "pestle")
+                    {
+                        if (Api.Side == EnumAppSide.Client)
+                            stoneSound.Start();
+
+                        InsertObject(activeSlot, PestleSlot, activeSlot.Itemstack.Item, 1);
+                        this.updateMesh(1);
+
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+        private bool InsertResource(ItemSlot activeSlot)
+        {
+            if (ResourceSlot.Empty && AlchemySlot1.Empty && AlchemySlot2.Empty)
+            {
+                if (activeSlot.Itemstack.Collectible.ItemClass == EnumItemClass.Item)
+                {
+                    if (activeSlot.Itemstack.Item.GrindingProps != null)
+                    {
+                        if (Api.Side == EnumAppSide.Client)
+                            SetGrindingParticlesColor(activeSlot.Itemstack.Item.LastCodePart(), activeSlot.Itemstack.Item.FirstCodePart());
+
+                        InsertObject(activeSlot, ResourceSlot, activeSlot.Itemstack.Item, 1);
+
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+        private bool InsertAlchemyObject1(ItemSlot activeSlot)
+        {
+            if (AlchemySlot1.Empty && ResourceSlot.Empty && !activeSlot.Empty)
+            {
+                if (AlchemyOutput.Empty)
+                {
+                    if (activeSlot.Itemstack.Collectible.Class == "BlockMushroom" && activeSlot.Itemstack.Block.FirstCodePart(1) == "flyagaric")
+                    {
+                        InsertObject(activeSlot, AlchemySlot1, activeSlot.Itemstack.Block, 1);
+
+                        return true;
+                    }
+                }
+                else
+                {
+                    if (activeSlot.Itemstack.Collectible.ItemClass == EnumItemClass.Item)
+                    {
+                        InsertObject(activeSlot, AlchemySlot1, activeSlot.Itemstack.Item, 1);
+                    }
+                    else
+                    {
+                        InsertObject(activeSlot, AlchemySlot1, activeSlot.Itemstack.Block, 1);
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
+        }
+        private bool InsertAlchemyObject2(ItemSlot activeSlot)
+        {
+            if (AlchemySlot2.Empty && ResourceSlot.Empty)
+            {
+                if (AlchemyOutput.Empty)
+                {
+                    if (activeSlot.Itemstack.Collectible.ItemClass == EnumItemClass.Block)
+                    {
+                        if (activeSlot.Itemstack.Block.FirstCodePart(1) == "horsetail")
+                        {
+                            InsertObject(activeSlot, AlchemySlot2, activeSlot.Itemstack.Block, 1);
+
+                            return true;
+                        }
+                    }
+                }
+                else
+                {
+                    if (activeSlot.Itemstack.Collectible.ItemClass == EnumItemClass.Item)
+                    {
+                        InsertObject(activeSlot, AlchemySlot2, activeSlot.Itemstack.Item, 1);
+                    }
+                    else
+                    {
+                        InsertObject(activeSlot, AlchemySlot2, activeSlot.Itemstack.Block, 1);
+                    }
+
+                    return true;
+                }
+            }
+
+            return false;
         }
         private void BeginGrind()
         {
             if (grindStartTime < 0)
             {
                 grindStartTime = Api.World.ElapsedMilliseconds;
+            }
+        }
+        private void BeginAlchemyGrind()
+        {
+            if (grindStartTime < 0)
+            {
+                if (grindStartTime < 0)
+                {
+                    alchemyRecipe = Api.World.GridRecipes.Find(e => e.Width == 1 && e.Height == 3 &&
+                            e.resolvedIngredients[0].SatisfiesAsIngredient(AlchemySlot1.Itemstack) &&
+                            e.resolvedIngredients[1].SatisfiesAsIngredient(AlchemySlot2.Itemstack) ||
+                            e.Width == 1 && e.Height == 3 &&
+                            e.resolvedIngredients[1].SatisfiesAsIngredient(AlchemySlot1.Itemstack) &&
+                            e.resolvedIngredients[0].SatisfiesAsIngredient(AlchemySlot2.Itemstack));
+
+                    if (alchemyRecipe != null)
+                        grindStartTime = Api.World.ElapsedMilliseconds;
+                }
             }
         }
         private void PerformGrind(IPlayer byPlayer)
@@ -310,12 +520,17 @@ namespace AncientTools.BlockEntity
 
             if(Api.Side == EnumAppSide.Server)
             {
-                GiveGroundItem(byPlayer);
+                if (!ResourceSlot.Empty)
+                    GiveGroundItem(byPlayer);
+                else
+                    MakeAlchemicalBase();
             }
             else if(Api.Side == EnumAppSide.Client)
             {
                 StopAudio();
             }
+
+            MarkDirty(true);
         }
         //-- Try to give the player the contents of the mortar resource stack whenever the grind is finished. Puts resource on the ground if there is no room. --//
         private void GiveGroundItem(IPlayer byPlayer)
@@ -332,6 +547,24 @@ namespace AncientTools.BlockEntity
 
             ResourceSlot.TakeOutWhole();
             ResourceSlot.MarkDirty();
+
+            MarkDirty(true);
+        }
+        private void MakeAlchemicalBase()
+        {
+            if (AlchemyOutput.Empty)
+                AlchemyOutput.Itemstack = new ItemStack(Api.World.GetItem(new AssetLocation("alchemy", "potionbase-basic")));
+            else
+                AlchemyOutput.Itemstack = new ItemStack(Api.World.GetItem(new AssetLocation("alchemy", "potionbase-" + alchemyRecipe.Output.ResolvedItemstack.Item.LastCodePart(1) + "-" + alchemyRecipe.Output.ResolvedItemstack.Item.LastCodePart())), 1);
+            
+            AlchemySlot1.TakeOutWhole();
+            AlchemySlot2.TakeOutWhole();
+
+            AlchemyOutput.MarkDirty();
+            AlchemySlot1.MarkDirty();
+            AlchemySlot2.MarkDirty();
+
+            MarkDirty(true);
         }
         private void StopAudio()
         {
@@ -359,6 +592,12 @@ namespace AncientTools.BlockEntity
         {
             MeshData addMesh = block.GenMesh(Api as ICoreClientAPI, path, textureSource);
             mesher.AddMeshData(addMesh);
+        }
+        private void InsertObject(ItemSlot playerActiveSlot, ItemSlot inventorySlot, Block block, int takeQuantity)
+        {
+            inventorySlot.Itemstack = new ItemStack(block, takeQuantity);
+            playerActiveSlot.TakeOut(takeQuantity);
+            MarkDirty(true);
         }
         private void InsertObject(ItemSlot playerActiveSlot, ItemSlot inventorySlot, Item item, int takeQuantity)
         {
